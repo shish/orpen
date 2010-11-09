@@ -44,7 +44,7 @@ observer.start()
 
 from twisted.application import internet, service
 from twisted.internet import reactor
-application = service.Application("fourpend")  # create the Application
+application = service.Application("orpend")  # create the Application
 tcpService = internet.TCPServer(24142, f_tcp) # create the service
 tcpService.setServiceParent(application)
 

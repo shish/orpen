@@ -8,7 +8,7 @@ import struct
 from select import select
 import logging
 logging.basicConfig(level=logging.INFO)
-log = logging.getLogger("fourpen")
+log = logging.getLogger("orpen")
 
 def main(args):
     server = args[1]
