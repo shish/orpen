@@ -225,7 +225,9 @@ class TapDevice:
         after closing the control channel.
         '''
 
-        os.close(self.__fd__)
+        if self.__fd__:
+            os.close(self.__fd__)
+            self.__fd__ = None
 
         
 class IfconfigError(Exception):
