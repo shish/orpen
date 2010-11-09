@@ -5,14 +5,13 @@ from threading import Thread
 import sys
 import socket
 import struct
+import time
 from select import select
 import logging
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("orpen")
 
-def main(args):
-    server = args[1]
-
+def connect(server):
     log.info("Connecting to "+server)
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     conn.connect((server, 24142))
@@ -23,23 +22,47 @@ def main(args):
     dev.ifconfig(address=addr)
     dev.up()
 
-    log.info("Wibbing traffic")
+    return conn, dev
+
+def disconnect(conn, dev):
+    try:
+        conn.close()
+    finally:
+        try:
+            dev.close()
+        finally:
+            pass
+
+def wibble(conn, dev):
+    log.info("Wibbling traffic")
     while True:
         readable, writable, errable = select([conn, dev], [], [conn, dev])
         if conn in readable:
             data = conn.recv(1024*4)
             if len(data) == 0:
                 return
-            log.debug("Read "+str(len(data))+" bytes from the network")
+            #log.debug("Read "+str(len(data))+" bytes from the network")
             dev.write(data)
         if dev in readable:
             data = dev.read()
-            log.debug("Writing "+str(len(data))+" bytes to the network")
+            #log.debug("Writing "+str(len(data))+" bytes to the network")
             conn.sendall(data)
         if len(errable) > 0:
-            log.error("A stream had an error")
-            conn.close()
-            dev.close()
+            raise Exception("A stream had an error")
+
+def main(args):
+    while True:
+        try:
+            conn, dev = connect(args[1])
+            wibble(conn, dev)
+        except KeyboardInterrupt:
+            log.info("Interrupted, exiting")
+            return 0
+        except Exception, e:
+            log.exception("Error detected, sleeping 5 seconds then reconnecting")
+            time.sleep(5)
+        finally:
+            disconnect(conn, dev)
 
 
 
