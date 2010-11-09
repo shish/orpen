@@ -25,7 +25,7 @@ def main(args):
 
     log.info("Wibbing traffic")
     while True:
-        readable, writable, errable = select([conn, dev], [conn, dev], [conn, dev])
+        readable, writable, errable = select([conn, dev], [], [conn, dev])
         if conn in readable:
             data = conn.recv(1024*4)
             if len(data) == 0:
