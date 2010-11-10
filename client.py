@@ -27,11 +27,12 @@ def connect(server):
 def disconnect(conn, dev):
     try:
         conn.close()
-    finally:
-        try:
-            dev.close()
-        finally:
-            pass
+    except Exception, e:
+        pass
+    try:
+        dev.close()
+    except Exception, e:
+        pass
 
 def wibble(conn, dev):
     log.info("Wibbling traffic")
@@ -51,6 +52,7 @@ def wibble(conn, dev):
             raise Exception("A stream had an error")
 
 def main(args):
+    conn, dev = None, None
     while True:
         try:
             conn, dev = connect(args[1])
