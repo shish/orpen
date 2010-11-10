@@ -40,7 +40,7 @@ class TCPConnection(Connection):
         return self._conn.sendall(data)
 
     def fileno(self):
-        return self._conn
+        return self._conn.fileno()
 
     def close(self):
         self._conn.close()
