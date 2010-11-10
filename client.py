@@ -11,11 +11,47 @@ import logging
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("orpen")
 
+class Connection(object):
+    def read(self, size):
+        pass
+
+    def write(self, data):
+        pass
+
+    def fileno(self):
+        pass
+
+    def close(self):
+        pass
+
+class TCPConnection(Connection):
+    def __init__(self, url):
+        if ":" in url:
+            (host, port) = url.split(":")
+        else:
+            (host, port) = (url, 24142)
+        self._conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._conn.connect((host, port))
+
+    def read(self, size):
+        return self._conn.recv(size)
+
+    def write(self, data):
+        return self._conn.sendall(data)
+
+    def fileno(self):
+        return self._conn
+
+    def close(self):
+        self._conn.close()
+
+
 def connect(server):
     log.info("Connecting to "+server)
-    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    conn.connect((server, 24142))
-    addr = "%d.%d.%d.%d/%d" % tuple([ord(c) for c in struct.unpack("ccccc", conn.recv(5))])
+    (proto, host) = server.split("://")
+    if proto == "tcp":
+        conn = TCPConnection(host)
+    addr = "%d.%d.%d.%d/%d" % tuple([ord(c) for c in struct.unpack("ccccc", conn.read(5))])
 
     log.info("Opening TAP device with address="+addr)
     dev = TapDevice(mode=IFF_TAP, name='py')
@@ -39,7 +75,7 @@ def wibble(conn, dev):
     while True:
         readable, writable, errable = select([conn, dev], [], [conn, dev])
         if conn in readable:
-            data = conn.recv(1024*4)
+            data = conn.read(1024*4)
             if len(data) == 0:
                 return
             #log.debug("Read "+str(len(data))+" bytes from the network")
@@ -47,7 +83,7 @@ def wibble(conn, dev):
         if dev in readable:
             data = dev.read()
             #log.debug("Writing "+str(len(data))+" bytes to the network")
-            conn.sendall(data)
+            conn.write(data)
         if len(errable) > 0:
             raise Exception("A stream had an error")
 
